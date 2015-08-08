@@ -26,7 +26,10 @@ def getAuthHttp(config):
     return credentials.authorize(Http())
 
 def upload(bucket, filename, config):
-    media = http.MediaFileUpload(filename, resumable = True)
+    if "mimetype" not in config:
+        config["mimetype"] = None
+
+    media = http.MediaFileUpload(filename, resumable = True, mimetype = config["mimetype"])
     client = build('storage', 'v1', http = getAuthHttp(config))
     req = client.objects().insert(bucket = bucket, name = os.path.basename(filename), media_body = media)
     try:
