@@ -1,0 +1,5 @@
+{
+    "private_key_file" : "not used, if private_key is specified",
+    "private_key" : "do NOT specify, if you load key from file",
+    "email" : "your google application service account email"
+}
