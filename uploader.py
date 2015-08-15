@@ -12,6 +12,7 @@ import json
 from googleapiclient import http
 from googleapiclient.discovery import build
 import os
+import io
 
 def getAuthHttp(config):
     if "private_key" in config:
@@ -39,12 +40,34 @@ def upload(bucket, filename, config):
         return 1
     return 0
 
+def downloadBucket(bucket, config):
+    client = build('storage', 'v1', http = getAuthHttp(config))
+
+    req = client.objects().list(bucket = bucket, fields = "nextPageToken,items(name)", maxResults = 100)
+    while req is not None:
+        resp = req.execute()
+        for item in resp['items']:
+            print("Downloading " + item['name'] + "...")
+            req = client.objects().get_media(bucket = bucket, object = item['name'])
+            fh = io.BytesIO()
+            downloader = http.MediaIoBaseDownload(fh, req)
+            done = False
+            while not done:
+                status, done = downloader.next_chunk()
+                if status:
+                    print("\tprogress: " + str(status.progress()) + "%")
+            print("\tcomplete.")
+            open(item['name'], "w+b").write(fh.getvalue())
+
 def main():
     if len(sys.argv) < 3:
         print("Usage: <bucket> <filename> [<config>]")
         return 1
     config = json.loads(open("uploader.json" if len(sys.argv) == 3 else sys.argv[3], "rt").read())
-    return upload(sys.argv[1], sys.argv[2], config)
+    if sys.argv[1] == "download":
+        return downloadBucket(sys.argv[2], config)
+    else:
+        return upload(sys.argv[1], sys.argv[2], config)
 
 if __name__ == '__main__':
     sys.exit(main())
