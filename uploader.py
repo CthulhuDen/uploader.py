@@ -55,7 +55,7 @@ def downloadBucket(bucket, config):
             while not done:
                 status, done = downloader.next_chunk()
                 if status:
-                    print("\tprogress: %.2f%%" % 100 * status.progress())
+                    print("\tprogress: %.2f%%" % (100 * status.progress()))
             print("\tcomplete.")
             open(item['name'], "w+b").write(fh.getvalue())
 
