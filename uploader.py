@@ -48,14 +48,15 @@ def downloadBucket(bucket, config):
         for item in resp['items']:
             print("Downloading " + item['name'] + "...")
             req = client.objects().get_media(bucket = bucket, object = item['name'])
-            fh = open(item['name'], 'w+b')
-            downloader = http.MediaIoBaseDownload(fh, req)
-            done = False
-            while not done:
-                status, done = downloader.next_chunk()
-                if status:
-                    print("\tprogress: %.2f%%" % (100 * status.progress()), end = "\r")
+            with open(item['name'], 'w+b') as file:
+                downloader = http.MediaIoBaseDownload(file, req)
+                done = False
+                while not done:
+                    status, done = downloader.next_chunk()
+                    if status:
+                        print("\tprogress: %.2f%%" % (100 * status.progress()), end = "\r")
             print("")
+        req = req.list_next(req, resp)
 
 def main():
     if len(sys.argv) < 3:
