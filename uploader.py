@@ -12,7 +12,6 @@ import json
 from googleapiclient import http
 from googleapiclient.discovery import build
 import os
-import io
 
 def getAuthHttp(config):
     if "private_key" in config:
