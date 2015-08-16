@@ -56,7 +56,7 @@ def downloadBucket(bucket, config):
                     if status:
                         print("\tprogress: %.2f%%" % (100 * status.progress()), end = "\r")
             print("")
-        req = req.list_next(req, resp)
+        req = client.list_next(req, resp)
 
 def main():
     if len(sys.argv) < 3:
