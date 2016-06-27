@@ -50,7 +50,7 @@ def download_bucket(bucket, config):
         resp = req.execute()
         for item in resp["items"]:
             download_bucket_file(bucket, item["name"], config, client)
-        req = client.list_next(req, resp)
+        req = client.objects().list_next(req, resp)
 
 
 def download_bucket_file(bucket, filename, config, client=None):
@@ -68,18 +68,37 @@ def download_bucket_file(bucket, filename, config, client=None):
     print("")
 
 
+def clean_bucket(bucket, config):
+    client = build("storage", "v1", http=get_auth_http(config))
+
+    req = client.objects().list(bucket=bucket, fields="nextPageToken,items(name)", maxResults=100)
+    days = set()
+    while req is not None:
+        resp = req.execute()
+        for item in resp["items"]:
+            date = item["name"][:10]
+            if date not in days:
+                days.add(date)
+            else:
+                client.objects().delete(bucket=bucket, object=item["name"]).execute()
+        req = client.objects().list_next(req, resp)
+
+
 def main():
     min_len = 4 if len(sys.argv) > 1 and sys.argv[1] == "download-file" else 3
     if len(sys.argv) < min_len:
         print("Usage: <bucket> <filename> [<config>]"
               " | download <bucket> [<config>]"
-              " | download-file <bucket> <file> [<config>]")
+              " | download-file <bucket> <file> [<config>]"
+              " | clean <bucket> [<config>]")
         return 1
     config = json.loads(open("uploader.json" if len(sys.argv) == min_len else sys.argv[min_len], "rt").read())
     if sys.argv[1] == "download":
         return download_bucket(sys.argv[2], config)
     elif sys.argv[1] == "download-file":
         return download_bucket_file(sys.argv[2], sys.argv[3], config)
+    elif sys.argv[1] == "clean":
+        return clean_bucket(sys.argv[2], config)
     else:
         return upload(sys.argv[1], sys.argv[2], config)
 
